@@ -7,7 +7,8 @@
     "dev": "vite dev",
     "build": "vite build",
     "preview": "vite preview",
-    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json"
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "deploy:cf": "npm run build && bunx wrangler pages deploy"
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1"
