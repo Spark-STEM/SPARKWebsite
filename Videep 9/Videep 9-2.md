@@ -1,4 +1,0 @@
--Finalized SuperSID python coverage script that returns a CSV when our SuperSID recording was active.
--Tested the SuperSID coverage script on Embedded Workstation. Fixed and debugged an issue with RIFF .wav files, which I had not initially expected with my dummy testing on my own laptop.
--Initial draft of code for the SuperSID coverage script was 300+ lines. I debloated the code to be at around ~100 lines to make it much more readable for any other team member that may have to use it in the future.
--Browsed AMS website and found two more meteor matches (event ID 7363-2026- a revision of a previous recorded and logged event in the sheet; and event ID 7359-2026)/ Both events have 2+ people reporting them so I will be able to triangulate it. I did need some help from Claude on that, but both Ionosphere Anydesks were down yesterday when I checked. Waiting on Anydesk/Claude availability to continue.
