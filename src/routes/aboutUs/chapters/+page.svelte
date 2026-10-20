@@ -25,8 +25,20 @@
 
 <style>
     .chapters-page {
+        width: 100%;
+        min-width: 0;
+        flex: 1 1 auto;
+        align-self: stretch;
         padding-top: var(--space-2xl);
         padding-bottom: var(--space-4xl);
+    }
+
+    :global(.chapters-page .page-header) {
+        max-width: none;
+        margin-bottom: 0;
+        padding: var(--space-lg) var(--space-lg) var(--space-md);
+        background: var(--surface-subtle);
+        border: 1px solid var(--border-subtle);
     }
 
     .kicker {

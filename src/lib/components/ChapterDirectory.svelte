@@ -1,15 +1,28 @@
 <script lang="ts">
-    import { chapters } from '$lib/data/chapters';
+    import { chapters as defaultChapters } from '$lib/data/chapters';
     import { onMount } from 'svelte';
+    import { fade, fly, slide } from 'svelte/transition';
+    import type { Chapter } from '$lib/types';
+
+    let {
+        chapterData = defaultChapters,
+    }: { chapterData?: Chapter[] } = $props();
 
     let searchTerm = $state('');
     let isFilterOpen = $state(false);
     let selectedLocations = $state<string[]>([]);
+    let collapsedCountries = $state<string[]>([]);
+    let collapsedRegions = $state<string[]>([]);
 
-    const availableLocations = [
-        { label: 'United States', value: 'united states' },
-        { label: 'Washington', value: 'washington' },
-    ];
+    const availableLocations = $derived(
+        Array.from(
+            new Map(
+                chapterData
+                    .flatMap((chapter) => [chapter.country, chapter.region])
+                    .map((location) => [location.toLowerCase(), location])
+            )
+        ).map(([value, label]) => ({ label, value }))
+    );
 
     function toggleLocation(value: string) {
         if (selectedLocations.includes(value)) {
@@ -22,6 +35,19 @@
     function toggleFilter(e: MouseEvent) {
         e.stopPropagation();
         isFilterOpen = !isFilterOpen;
+    }
+
+    function toggleCountry(country: string) {
+        collapsedCountries = collapsedCountries.includes(country)
+            ? collapsedCountries.filter((value) => value !== country)
+            : [...collapsedCountries, country];
+    }
+
+    function toggleRegion(country: string, region: string) {
+        const key = `${country}:${region}`;
+        collapsedRegions = collapsedRegions.includes(key)
+            ? collapsedRegions.filter((value) => value !== key)
+            : [...collapsedRegions, key];
     }
 
     onMount(() => {
@@ -38,7 +64,7 @@
     });
 
     const filteredChapters = $derived(
-        chapters.filter((chapter) => {
+        chapterData.filter((chapter) => {
             const term = searchTerm.toLowerCase().trim();
             const matchesSearch =
                 !term ||
@@ -57,6 +83,44 @@
             return matchesSearch && matchesLocation;
         })
     );
+
+    const groupedChapters = $derived(
+        filteredChapters.reduce(
+            (countries, chapter) => {
+                const country = countries.find(
+                    (item) => item.name === chapter.country
+                );
+
+                if (country) {
+                    const region = country.regions.find(
+                        (item) => item.name === chapter.region
+                    );
+                    if (region) {
+                        region.chapters.push(chapter);
+                    } else {
+                        country.regions.push({
+                            name: chapter.region,
+                            chapters: [chapter],
+                        });
+                    }
+                } else {
+                    countries.push({
+                        name: chapter.country,
+                        regions: [
+                            { name: chapter.region, chapters: [chapter] },
+                        ],
+                    });
+                }
+
+                return countries;
+            },
+            [] as {
+                name: string;
+                regions: { name: string; chapters: typeof filteredChapters }[];
+            }[]
+        )
+    );
+
 </script>
 
 <div class="directory-section">
@@ -121,56 +185,116 @@
         </div>
     </div>
 
-    <div class="table-wrapper">
-        <table class="directory-table" aria-label="SPARK chapter directory">
-            <thead>
-                <tr>
-                    <th scope="col">School</th>
-                    <th scope="col">Country</th>
-                    <th scope="col">State / Region</th>
-                </tr>
-            </thead>
-            <tbody>
-                {#if filteredChapters.length === 0}
-                    <tr>
-                        <td colspan="3" class="empty-state">
-                            No chapters match your search. Try clearing your
-                            filters.
-                        </td>
-                    </tr>
-                {:else}
-                    {#each filteredChapters as item}
-                        <tr class="directory-row">
-                            <td>
-                                <a
-                                    href={item.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    class="school-link"
+    {#if filteredChapters.length === 0}
+        <div class="directory-groups empty-results" aria-live="polite">
+            <p class="empty-state">
+                No chapters match your search. Try clearing your filters.
+            </p>
+        </div>
+    {:else}
+        <div class="directory-groups" aria-label="SPARK chapter directory">
+            {#each groupedChapters as country (country.name)}
+                <section class="country-group" in:fade={{ duration: 180 }} out:fade={{ duration: 120 }}>
+                    <button
+                        type="button"
+                        class="section-heading country-heading"
+                        onclick={() => toggleCountry(country.name)}
+                        aria-expanded={!collapsedCountries.includes(country.name)}
+                    >
+                        <span>{country.name}</span>
+                        <span class="heading-line" aria-hidden="true"></span>
+                        <span
+                            class="chevron"
+                            class:collapsed={collapsedCountries.includes(
+                                country.name
+                            )}
+                            aria-hidden="true"></span>
+                    </button>
+
+                    {#if !collapsedCountries.includes(country.name)}
+                        <div transition:slide={{ duration: 260 }} class="collapsible-content">
+                        {#each country.regions as region (region.name)}
+                            {@const regionKey = `${country.name}:${region.name}`}
+                            <div class="region-group" in:fade={{ duration: 180 }} out:fade={{ duration: 120 }}>
+                                <button
+                                    type="button"
+                                    class="section-heading region-heading"
+                                    onclick={() =>
+                                        toggleRegion(country.name, region.name)}
+                                    aria-expanded={!collapsedRegions.includes(
+                                        regionKey
+                                    )}
                                 >
-                                    {item.school} ↗
-                                </a>
-                            </td>
-                            <td>{item.country}</td>
-                            <td>{item.region}</td>
-                        </tr>
-                    {/each}
-                {/if}
-            </tbody>
-        </table>
-    </div>
+                                    <span>{region.name}</span>
+                                    <span
+                                        class="heading-line"
+                                        aria-hidden="true"></span>
+                                    <span
+                                        class="chevron"
+                                        class:collapsed={collapsedRegions.includes(
+                                            regionKey
+                                        )}
+                                        aria-hidden="true"></span>
+                                </button>
+
+                                {#if !collapsedRegions.includes(regionKey)}
+                                    <div transition:slide={{ duration: 240 }} class="collapsible-content">
+                                    <div class="chapter-grid">
+                                        {#each region.chapters as item, index (item.url)}
+                                            <a
+                                                href={item.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                class="chapter-card"
+                                                in:fly={{ y: 12, duration: 220 }}
+                                                out:fade={{ duration: 140 }}
+                                            >
+                                                <div class="chapter-image">
+                                                    <img
+                                                        src={item.image ?? `/assets/classroom_images/${(index % 3) + 1}.png`}
+                                                        alt=""
+                                                    />
+                                                </div>
+                                                <div class="chapter-details">
+                                                    <h3>{item.school}</h3>
+                                                    <p>{item.region} chapter</p>
+                                                </div>
+                                            </a>
+                                        {/each}
+                                    </div>
+                                    </div>
+                                {/if}
+                            </div>
+                        {/each}
+                        </div>
+                    {/if}
+                </section>
+            {/each}
+        </div>
+    {/if}
 </div>
 
 <style>
     .directory-section {
+        display: block;
+        width: 100%;
+        min-width: 0;
+        align-self: stretch;
         margin-top: var(--space-xl);
     }
 
     .search-bar {
+        position: sticky;
+        top: var(--nav-height);
+        z-index: 20;
         display: flex;
         align-items: center;
         gap: var(--space-md);
-        margin-bottom: var(--space-xl);
+        margin: 0 calc(var(--space-lg) * -1) var(--space-xl);
+        padding: var(--space-sm) var(--space-lg);
+        background: color-mix(in srgb, var(--surface-page) 88%, transparent);
+        border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+        backdrop-filter: blur(14px);
     }
 
     .input-wrapper {
@@ -312,61 +436,151 @@
         }
     }
 
-    .table-wrapper {
-        background: var(--color-surface);
-        border: 1px solid var(--color-border);
-        border-radius: var(--radius-lg);
-        overflow: hidden;
-        box-shadow: var(--shadow-sm);
-    }
-
-    .directory-table {
+    .directory-groups {
+        display: block;
         width: 100%;
-        border-collapse: collapse;
-        text-align: left;
-        font-size: 15px;
-
-        th {
-            background: var(--surface-subtle);
-            padding: 14px 20px;
-            font-weight: 700;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--text-tertiary);
-            border-bottom: 1px solid var(--color-border);
-        }
-
-        td {
-            padding: 16px 20px;
-            border-bottom: 1px solid var(--border-subtle);
-            color: var(--text-secondary);
-        }
-
-        tr:last-child td {
-            border-bottom: none;
-        }
-
-        tbody tr {
-            transition: background 120ms ease;
-
-            &:hover {
-                background: var(--surface-subtle);
-            }
-        }
     }
 
-    .school-link {
-        font-weight: 600;
-        color: var(--brand);
+    .empty-results {
+        display: block;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .country-group,
+    .region-group {
+        display: grid;
+        gap: var(--space-sm);
+    }
+
+    .section-heading {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        gap: 10px;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        color: var(--text-primary);
+        box-shadow: none;
+        text-align: left;
+        cursor: pointer;
+        transition: color var(--duration-fast) ease;
 
         &:hover {
-            color: var(--brand-hover);
-            text-decoration: underline;
+            color: var(--brand);
+            background: transparent;
+            box-shadow: none;
+            transform: none;
+        }
+    }
+
+    .country-heading {
+        position: relative;
+        padding: 10px 12px;
+        font-size: clamp(1.3rem, 2.4vw, 1.65rem);
+        font-weight: 700;
+        letter-spacing: -0.01em;
+    }
+
+    .region-heading {
+        position: relative;
+        padding: 8px 12px;
+        font-size: 1.15rem;
+        font-weight: 650;
+    }
+
+    .heading-line {
+        height: 1px;
+        flex: 1;
+        background: var(--border);
+    }
+
+    .chevron {
+        width: 11px;
+        height: 11px;
+        margin-right: 4px;
+        border-right: 2px solid currentColor;
+        border-bottom: 2px solid currentColor;
+        transform: rotate(45deg) translateY(-3px);
+        transition: transform var(--duration-normal) var(--ease-out);
+
+        &.collapsed {
+            transform: rotate(-45deg) translate(-2px, 2px);
+        }
+    }
+
+    .chapter-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: var(--space-md);
+        padding: var(--space-sm) var(--space-xs) var(--space-sm);
+    }
+
+    .chapter-card {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid #b9afa2;
+        border-radius: 12px 12px 5px 5px;
+        background: var(--color-surface);
+        box-shadow: var(--shadow-sm);
+        color: var(--text-primary);
+        isolation: isolate;
+        transition:
+            transform var(--duration-fast) ease,
+            box-shadow var(--duration-fast) ease,
+            border-color var(--duration-fast) ease;
+
+        &:hover {
+            color: var(--text-primary);
+            box-shadow: var(--shadow-sm);
+            transform: translateY(-2px);
+            border-color: var(--brand);
+        }
+
+        &:focus-visible {
+            outline: 2px solid var(--brand);
+            outline-offset: 3px;
+        }
+    }
+
+    .chapter-image {
+        position: relative;
+        z-index: 1;
+        aspect-ratio: 1.65;
+        overflow: hidden;
+        background: var(--surface-muted);
+
+        img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    }
+
+    .chapter-details {
+        position: relative;
+        z-index: 1;
+        padding: var(--space-sm) var(--space-md) var(--space-md);
+
+        h3 {
+            margin-bottom: 3px;
+            color: var(--brand);
+            font-size: 1rem;
+            line-height: 1.25;
+        }
+
+        p {
+            margin: 0;
+            color: var(--text-tertiary);
+            font-size: 12px;
         }
     }
 
     .empty-state {
+        width: 100%;
+        margin: var(--space-xl) 0;
         text-align: center;
         padding: 40px 20px;
         color: var(--text-tertiary);
@@ -374,12 +588,15 @@
     }
 
     @media (max-width: 640px) {
-        .table-wrapper {
-            overflow-x: auto;
+        .search-bar {
+            margin-right: calc(var(--space-md) * -1);
+            margin-left: calc(var(--space-md) * -1);
+            padding-right: var(--space-md);
+            padding-left: var(--space-md);
         }
 
-        .directory-table {
-            min-width: 480px;
+        .chapter-grid {
+            grid-template-columns: 1fr;
         }
     }
 </style>

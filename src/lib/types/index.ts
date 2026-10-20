@@ -1,6 +1,7 @@
 export interface Chapter {
   school: string;
   url: string;
+  image?: string;
   country: string;
   region: string;
 }
