@@ -8,15 +8,17 @@
     "build": "vite build",
     "preview": "vite preview",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-    "deploy:cf": "npm run build && bunx wrangler pages deploy"
+    "deploy:cf": "npm run build && npx wrangler pages deploy build"
   },
   "dependencies": {
-    "@emailjs/browser": "^4.4.1"
+    "@emailjs/browser": "^4.4.1",
+    "leaflet": "^1.9.4"
   },
   "devDependencies": {
     "@sveltejs/adapter-static": "^3.0.8",
     "@sveltejs/kit": "^2.17.0",
     "@sveltejs/vite-plugin-svelte": "^5.0.0",
+    "@types/leaflet": "^1.9.22",
     "@types/node": "^22.20.5",
     "svelte": "^5.20.0",
     "svelte-check": "^4.1.0",

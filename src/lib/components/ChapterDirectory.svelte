@@ -1,12 +1,28 @@
 <script lang="ts">
-    import { chapters as defaultChapters } from '$lib/data/chapters';
     import { onMount } from 'svelte';
     import { fade, fly, slide } from 'svelte/transition';
-    import type { Chapter } from '$lib/types';
+    import { getDirectoryApiBase } from '$lib/data/directoryApi';
 
-    let {
-        chapterData = defaultChapters,
-    }: { chapterData?: Chapter[] } = $props();
+    interface DirectoryItem {
+        id: number;
+        title: string;
+        subtitle: string;
+        country: string;
+        region: string;
+        url: string;
+        image: string | null;
+        chapterUrl: string | null;
+    }
+
+    interface DirectoryResponse {
+        chapters: DirectoryItem[];
+        schools: DirectoryItem[];
+    }
+
+    let directoryData = $state<DirectoryResponse | null>(null);
+    let isLoading = $state(true);
+    let loadError = $state('');
+    let viewMode = $state<'chapters' | 'schools'>('chapters');
 
     let searchTerm = $state('');
     let isFilterOpen = $state(false);
@@ -14,11 +30,18 @@
     let collapsedCountries = $state<string[]>([]);
     let collapsedRegions = $state<string[]>([]);
 
+    const directoryItems = $derived(
+        viewMode === 'chapters'
+            ? (directoryData?.chapters ?? [])
+            : (directoryData?.schools ?? [])
+    );
+
     const availableLocations = $derived(
         Array.from(
             new Map(
-                chapterData
-                    .flatMap((chapter) => [chapter.country, chapter.region])
+                directoryItems
+                    .flatMap((item) => [item.country, item.region])
+                    .filter(Boolean)
                     .map((location) => [location.toLowerCase(), location])
             )
         ).map(([value, label]) => ({ label, value }))
@@ -58,56 +81,76 @@
             }
         }
         document.addEventListener('click', handleClickOutside);
-        return () => {
-            document.removeEventListener('click', handleClickOutside);
-        };
+
+        async function loadDirectory() {
+            try {
+                const response = await fetch(getDirectoryApiBase());
+                if (!response.ok) {
+                    throw new Error(
+                        `Directory request failed (${response.status}).`
+                    );
+                }
+                directoryData = (await response.json()) as DirectoryResponse;
+            } catch (error) {
+                loadError =
+                    error instanceof Error
+                        ? error.message
+                        : 'Unable to load the chapter and school directory.';
+            } finally {
+                isLoading = false;
+            }
+        }
+
+        void loadDirectory();
+        return () => document.removeEventListener('click', handleClickOutside);
     });
 
-    const filteredChapters = $derived(
-        chapterData.filter((chapter) => {
+    const filteredItems = $derived(
+        directoryItems.filter((item) => {
             const term = searchTerm.toLowerCase().trim();
             const matchesSearch =
                 !term ||
-                chapter.school.toLowerCase().includes(term) ||
-                chapter.country.toLowerCase().includes(term) ||
-                chapter.region.toLowerCase().includes(term);
+                item.title.toLowerCase().includes(term) ||
+                item.subtitle.toLowerCase().includes(term) ||
+                item.country.toLowerCase().includes(term) ||
+                item.region.toLowerCase().includes(term);
 
             const matchesLocation =
                 selectedLocations.length === 0 ||
                 selectedLocations.some(
                     (loc) =>
-                        chapter.country.toLowerCase().includes(loc) ||
-                        chapter.region.toLowerCase().includes(loc)
+                        item.country.toLowerCase().includes(loc) ||
+                        item.region.toLowerCase().includes(loc)
                 );
 
             return matchesSearch && matchesLocation;
         })
     );
 
-    const groupedChapters = $derived(
-        filteredChapters.reduce(
-            (countries, chapter) => {
+    const groupedItems = $derived(
+        filteredItems.reduce(
+            (countries, item) => {
                 const country = countries.find(
-                    (item) => item.name === chapter.country
+                    (group) => group.name === item.country
                 );
 
                 if (country) {
                     const region = country.regions.find(
-                        (item) => item.name === chapter.region
+                        (group) => group.name === item.region
                     );
                     if (region) {
-                        region.chapters.push(chapter);
+                        region.items.push(item);
                     } else {
                         country.regions.push({
-                            name: chapter.region,
-                            chapters: [chapter],
+                            name: item.region,
+                            items: [item],
                         });
                     }
                 } else {
                     countries.push({
-                        name: chapter.country,
+                        name: item.country,
                         regions: [
-                            { name: chapter.region, chapters: [chapter] },
+                            { name: item.region, items: [item] },
                         ],
                     });
                 }
@@ -116,11 +159,10 @@
             },
             [] as {
                 name: string;
-                regions: { name: string; chapters: typeof filteredChapters }[];
+                regions: { name: string; items: typeof filteredItems }[];
             }[]
         )
     );
-
 </script>
 
 <div class="directory-section">
@@ -128,8 +170,8 @@
         <div class="input-wrapper">
             <input
                 type="search"
-                placeholder="Search for a chapter..."
-                aria-label="Search chapters by school name or location"
+                placeholder={`Search for a ${viewMode === 'chapters' ? 'chapter' : 'school'}...`}
+                aria-label={`Search ${viewMode} by name or location`}
                 bind:value={searchTerm}
             />
         </div>
@@ -140,7 +182,7 @@
                 class="filter-button"
                 class:active={selectedLocations.length > 0 || isFilterOpen}
                 onclick={toggleFilter}
-                aria-label="Filter chapters by location"
+                aria-label={`Filter ${viewMode} by location`}
                 aria-expanded={isFilterOpen}
             >
                 <img
@@ -183,17 +225,37 @@
                 </div>
             {/if}
         </div>
+
+        <button
+            type="button"
+            class="view-toggle"
+            onclick={() =>
+                (viewMode = viewMode === 'chapters' ? 'schools' : 'chapters')}
+        >
+            Show {viewMode === 'chapters' ? 'Schools' : 'Chapters'}
+        </button>
     </div>
 
-    {#if filteredChapters.length === 0}
+    {#if isLoading}
+        <div class="directory-groups empty-results" aria-live="polite">
+            <p class="empty-state">Loading {viewMode}...</p>
+        </div>
+    {:else if loadError}
+        <div class="directory-groups empty-results" role="alert">
+            <p class="empty-state">{loadError}</p>
+        </div>
+    {:else if filteredItems.length === 0}
         <div class="directory-groups empty-results" aria-live="polite">
             <p class="empty-state">
-                No chapters match your search. Try clearing your filters.
+                No {viewMode} match your search. Try clearing your filters.
             </p>
         </div>
     {:else}
-        <div class="directory-groups" aria-label="SPARK chapter directory">
-            {#each groupedChapters as country (country.name)}
+        <div
+            class="directory-groups"
+            aria-label={`SPARK ${viewMode} directory`}
+        >
+            {#each groupedItems as country (country.name)}
                 <section class="country-group" in:fade={{ duration: 180 }} out:fade={{ duration: 120 }}>
                     <button
                         type="button"
@@ -240,26 +302,47 @@
                                 {#if !collapsedRegions.includes(regionKey)}
                                     <div transition:slide={{ duration: 240 }} class="collapsible-content">
                                     <div class="chapter-grid">
-                                        {#each region.chapters as item, index (item.url)}
-                                            <a
-                                                href={item.url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
+                                        {#each region.items as item (item.id)}
+                                            <article
                                                 class="chapter-card"
                                                 in:fly={{ y: 12, duration: 220 }}
                                                 out:fade={{ duration: 140 }}
                                             >
-                                                <div class="chapter-image">
-                                                    <img
-                                                        src={item.image ?? `/assets/classroom_images/${(index % 3) + 1}.png`}
-                                                        alt=""
-                                                    />
+                                                <a
+                                                    href={item.url}
+                                                    class="card-hitbox"
+                                                    aria-label={`View ${viewMode === 'chapters' ? 'chapter' : 'school'} details for ${item.title}`}
+                                                ></a>
+                                                <div
+                                                    class="chapter-image"
+                                                    class:placeholder={!item.image}
+                                                >
+                                                    {#if item.image}
+                                                        <img
+                                                            src={item.image}
+                                                            alt=""
+                                                        />
+                                                    {:else}
+                                                        <span aria-hidden="true">
+                                                            {item.title.slice(0, 1)}
+                                                        </span>
+                                                    {/if}
                                                 </div>
                                                 <div class="chapter-details">
-                                                    <h3>{item.school}</h3>
-                                                    <p>{item.region} chapter</p>
+                                                    <h3>{item.title}</h3>
+                                                    <p>
+                                                        {#if item.chapterUrl}
+                                                            <a
+                                                                href={item.chapterUrl}
+                                                                class="chapter-link"
+                                                            >{item.subtitle}</a
+                                                            >
+                                                        {:else}
+                                                            {item.subtitle}
+                                                        {/if}
+                                                    </p>
                                                 </div>
-                                            </a>
+                                            </article>
                                         {/each}
                                     </div>
                                     </div>
@@ -301,6 +384,7 @@
         flex: 1;
         max-width: 480px;
         position: relative;
+        min-width: 0;
     }
 
     .input-wrapper input {
@@ -312,6 +396,35 @@
 
     .filter-container {
         position: relative;
+    }
+
+    .view-toggle {
+        flex-shrink: 0;
+        margin-left: auto;
+        padding: 0 16px;
+        min-height: 44px;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        background: var(--color-surface);
+        color: var(--text-primary);
+        font-weight: 650;
+        white-space: nowrap;
+        box-shadow: var(--shadow-xs);
+        transition:
+            background 150ms ease,
+            border-color 150ms ease,
+            color 150ms ease;
+
+        &:hover {
+            background: var(--brand-tint);
+            border-color: var(--brand);
+            color: var(--brand);
+        }
+
+        &:focus-visible {
+            outline: 2px solid var(--brand);
+            outline-offset: 3px;
+        }
     }
 
     .filter-button {
@@ -533,15 +646,9 @@
             border-color var(--duration-fast) ease;
 
         &:hover {
-            color: var(--text-primary);
             box-shadow: var(--shadow-sm);
             transform: translateY(-2px);
             border-color: var(--brand);
-        }
-
-        &:focus-visible {
-            outline: 2px solid var(--brand);
-            outline-offset: 3px;
         }
     }
 
@@ -557,6 +664,36 @@
             height: 100%;
             object-fit: cover;
         }
+
+        &.placeholder {
+            display: grid;
+            place-items: center;
+            background:
+                radial-gradient(
+                    circle at 70% 20%,
+                    color-mix(in srgb, var(--brand) 26%, transparent),
+                    transparent 45%
+                ),
+                var(--surface-muted);
+
+            span {
+                color: color-mix(in srgb, var(--brand) 78%, white);
+                font-size: clamp(3rem, 8vw, 5rem);
+                font-weight: 750;
+                line-height: 1;
+            }
+        }
+    }
+
+    .card-hitbox {
+        position: absolute;
+        z-index: 2;
+        inset: 0;
+
+        &:focus-visible {
+            outline: 3px solid var(--brand);
+            outline-offset: -3px;
+        }
     }
 
     .chapter-details {
@@ -569,6 +706,18 @@
             color: var(--brand);
             font-size: 1rem;
             line-height: 1.25;
+        }
+
+        .chapter-link {
+            position: relative;
+            z-index: 3;
+            color: inherit;
+            text-decoration: none;
+
+            &:hover {
+                color: var(--brand);
+                text-decoration: underline;
+            }
         }
 
         p {
@@ -589,10 +738,17 @@
 
     @media (max-width: 640px) {
         .search-bar {
+            gap: var(--space-xs);
             margin-right: calc(var(--space-md) * -1);
             margin-left: calc(var(--space-md) * -1);
             padding-right: var(--space-md);
             padding-left: var(--space-md);
+        }
+
+        .view-toggle {
+            padding-right: 10px;
+            padding-left: 10px;
+            font-size: 12px;
         }
 
         .chapter-grid {

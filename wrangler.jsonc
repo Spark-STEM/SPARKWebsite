@@ -2,5 +2,12 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "spark-stem",
   "pages_build_output_dir": "./build",
-  "compatibility_date": "2026-10-14"
+  "compatibility_date": "2026-10-14",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "spark_org_data",
+      "database_id": "1f136a47-85bd-43a2-ae00-a326d28f1383"
+    }
+  ]
 }

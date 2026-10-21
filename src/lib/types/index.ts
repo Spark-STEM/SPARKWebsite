@@ -1,11 +1,3 @@
-export interface Chapter {
-  school: string;
-  url: string;
-  image?: string;
-  country: string;
-  region: string;
-}
-
 export interface StatItem {
   icon: string;
   value: number;

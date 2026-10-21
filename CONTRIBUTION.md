@@ -1,6 +1,6 @@
 ## Setup
 
-The project is built with **SvelteKit** and **Svelte 5** in static generation mode (`@sveltejs/adapter-static`), generating production files into `build/` for Firebase Hosting.
+The project is built with **SvelteKit** and **Svelte 5** in static generation mode (`@sveltejs/adapter-static`), generating production files into `build/` for Cloudflare Pages.
 
 ### Quick Start
 
@@ -22,7 +22,8 @@ npm run build
 
 - Components are located in `src/lib/components/` and use **Svelte 5 runes** (`$state`, `$derived`, `$props`, `$effect`).
 - Pages and routes are organized using SvelteKit directory-based routing under `src/routes/`.
-- Data sets (such as chapter directories, statistics, testimonials) are centralized under `src/lib/data/` and typed in `src/lib/types/`.
+- Static data sets such as statistics and testimonials are centralized under `src/lib/data/` and typed in `src/lib/types/`.
+- Chapter and school directory data is loaded from Cloudflare D1 through Pages Functions in `functions/`; do not add static directory records.
 
 ### Scoped CSS & Styling
 

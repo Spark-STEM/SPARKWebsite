@@ -2,7 +2,7 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig, type Plugin } from 'vite';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
-/** Match Firebase Hosting: serve static/Xcratch/index.html at /Xcratch. */
+/** Serve static/Xcratch/index.html at /Xcratch in local dev and preview. */
 function xcratchIndexRewrite(): Plugin {
     const rewrite = (
         req: IncomingMessage,
