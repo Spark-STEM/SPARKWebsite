@@ -80,3 +80,6 @@ build/
 
 # vscode mcp config
 .mcp.json
+
+# wrangler
+.wrangler/

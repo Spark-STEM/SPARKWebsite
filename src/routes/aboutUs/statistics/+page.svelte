@@ -40,9 +40,8 @@
         {#if showSeasonalNotice}
             <div class="seasonal-banner" role="status">
                 <p>
-                    📊 <strong>Coming Soon:</strong> Detailed season-by-season reporting
-                    and demographic growth metrics are currently being compiled for
-                    the upcoming annual review.
+                   <strong>Coming Soon:</strong> Detailed season-by-season reporting
+                    and demographic growth metrics are currently being compiled.
                 </p>
             </div>
         {/if}

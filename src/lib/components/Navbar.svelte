@@ -91,13 +91,14 @@
                             Mission
                         </a>
                         <a
-                            href="/aboutUs/chapters"
-                            class:active={$page.url.pathname ===
-                                '/aboutUs/chapters'}
+                            href="/aboutUs/locations"
+                            class:active={$page.url.pathname.startsWith(
+                                '/aboutUs/locations'
+                            )}
                             role="menuitem"
                             onclick={closeAll}
                         >
-                            Chapters
+                            Locations
                         </a>
                         <a
                             href="/aboutUs/statistics"

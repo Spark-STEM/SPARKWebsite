@@ -25,8 +25,8 @@
             </p>
             <div class="hero-actions">
                 <a href="/contactUs" class="btn btn-lg">Contact Us</a>
-                <a href="/aboutUs/chapters" class="btn btn-secondary btn-lg"
-                    >View Chapters</a
+                <a href="/aboutUs/locations" class="btn btn-secondary btn-lg"
+                    >View Locations</a
                 >
             </div>
         </div>

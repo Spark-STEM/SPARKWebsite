@@ -16,8 +16,8 @@
         </p>
         <div class="error-actions">
             <a href="/" class="btn btn-lg">Return to Home</a>
-            <a href="/aboutUs/chapters" class="btn btn-secondary btn-lg"
-                >View Chapters</a
+            <a href="/aboutUs/locations" class="btn btn-secondary btn-lg"
+                >View Locations</a
             >
         </div>
     </div>

@@ -5,7 +5,7 @@
             <ul>
                 <li><a href="/">Home</a></li>
                 <li><a href="/aboutUs/mission">Mission</a></li>
-                <li><a href="/aboutUs/chapters">Chapters</a></li>
+                <li><a href="/aboutUs/locations">Locations</a></li>
                 <li><a href="/aboutUs/statistics">Our Statistics</a></li>
                 <li><a href="/volunteer">Volunteer</a></li>
                 <li><a href="/contactUs">Contact Us</a></li>

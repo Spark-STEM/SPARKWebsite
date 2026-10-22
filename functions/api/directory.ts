@@ -81,7 +81,10 @@ export const onRequest = async ({
                     COALESCE(c.region, 'Other') AS region
                 FROM schools s
                 LEFT JOIN chapters c ON s.chapter_id = c.id
-                ORDER BY s.name
+                ORDER BY
+                    c.country COLLATE NOCASE,
+                    c.region COLLATE NOCASE,
+                    s.name COLLATE NOCASE
             `).all<SchoolRow>(),
         ]);
 
@@ -91,8 +94,12 @@ export const onRequest = async ({
             subtitle: `${chapter.schoolCount} ${chapter.schoolCount === 1 ? 'school' : 'schools'}`,
             country: chapter.country ?? 'Other',
             region: chapter.region ?? 'Other',
-            url: `/aboutUs/chapters/chapter/${chapter.id}-${toSlug(chapter.name ?? 'chapter')}`,
+            url: `/aboutUs/locations/chapter/${chapter.id}-${toSlug(chapter.name ?? 'chapter')}`,
             image: null,
+            images: schoolResult.results
+                .filter((school) => school.chapterId === chapter.id)
+                .map((school) => school.coverImage)
+                .filter((image): image is string => Boolean(image)),
             chapterUrl: null,
         }));
         const schools = schoolResult.results.map((school) => ({
@@ -103,11 +110,11 @@ export const onRequest = async ({
                 : 'No chapter assigned',
             country: school.country ?? 'Other',
             region: school.region ?? 'Other',
-            url: `/aboutUs/chapters/school/${school.id}-${toSlug(school.name)}`,
+            url: `/aboutUs/locations/school/${school.id}-${toSlug(school.name)}`,
             image: school.coverImage,
             chapterUrl:
                 school.chapterName && school.chapterId
-                    ? `/aboutUs/chapters/chapter/${school.chapterId}-${toSlug(school.chapterName)}`
+                    ? `/aboutUs/locations/chapter/${school.chapterId}-${toSlug(school.chapterName)}`
                     : null,
         }));
 

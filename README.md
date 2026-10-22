@@ -56,11 +56,13 @@ Deploy with the Cloudflare Pages Git integration or run
 Deploying only the `build/` directory with a tool that omits `functions/` will
 not publish the API or dynamic detail routes.
 
-Local Vite development and preview use the deployed read-only Pages API. For
-local Pages Function development, first run
-`npx wrangler d1 migrations apply spark_org_data --local`, then run
-`npx wrangler pages dev build`. Its D1 binding uses local D1 data unless
-configured to use a remote database.
+For local UI development, run `npm run dev` and open `http://localhost:5173`.
+When a Pages dev server is available at `http://127.0.0.1:8788`, the Vite app
+uses its local Functions API; otherwise, it falls back to the deployed API.
+To test the Functions locally, run `npm run build`, then
+`npx wrangler pages dev build`. The `DB` binding is configured as a remote
+binding, so these local Functions query the existing Cloudflare D1 database;
+avoid adding or invoking writes while testing.
 
 ## Contribution
 

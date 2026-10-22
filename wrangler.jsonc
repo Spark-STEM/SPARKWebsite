@@ -7,7 +7,8 @@
     {
       "binding": "DB",
       "database_name": "spark_org_data",
-      "database_id": "1f136a47-85bd-43a2-ae00-a326d28f1383"
+      "database_id": "1f136a47-85bd-43a2-ae00-a326d28f1383",
+      "remote": true
     }
   ]
 }

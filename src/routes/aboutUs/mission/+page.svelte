@@ -60,8 +60,8 @@
         title="Fully Ran by Students"
         imageSrc="/assets/classroom_images/3.png"
         imageAlt="High school volunteer mentor working with small student group"
-        actionHref="/aboutUs/chapters"
-        actionText="View Our Chapters →"
+        actionHref="/aboutUs/locations"
+        actionText="View Our Locations →"
         actionVariant="secondary"
     >
         <p>

@@ -2,7 +2,9 @@
 /pages/volunteer.html        /volunteer           301
 /pages/contactUs.html        /contactUs           301
 /pages/aboutUs/mission.html   /aboutUs/mission     301
-/pages/aboutUs/chapters.html  /aboutUs/chapters    301
+/pages/aboutUs/chapters.html  /aboutUs/locations   301
+/aboutUs/chapters             /aboutUs/locations   301
+/aboutUs/chapters/*           /aboutUs/locations/:splat  301
 /pages/aboutUs/statistics.html /aboutUs/statistics 301
 /pages/Xcratch/index.html    /Xcratch             301
 /Xcratch                     /Xcratch/index.html  200

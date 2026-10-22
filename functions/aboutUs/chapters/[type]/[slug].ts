@@ -1,9 +1,8 @@
 interface Context {
     request: Request;
-    next(request?: Request): Promise<Response>;
 }
 
-export const onRequest = async ({ request, next }: Context): Promise<Response> => {
+export const onRequest = async ({ request }: Context): Promise<Response> => {
     if (request.method !== 'GET' && request.method !== 'HEAD') {
         return new Response('Method not allowed.', {
             status: 405,
@@ -11,6 +10,10 @@ export const onRequest = async ({ request, next }: Context): Promise<Response> =
         });
     }
 
-    const fallbackUrl = new URL('/404.html', request.url);
-    return next(new Request(fallbackUrl, request));
+    const destination = new URL(request.url);
+    destination.pathname = destination.pathname.replace(
+        '/aboutUs/chapters/',
+        '/aboutUs/locations/'
+    );
+    return Response.redirect(destination, 308);
 };

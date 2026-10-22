@@ -44,9 +44,9 @@
                         <div class="step-content">
                             <h3>Find the chapter you want to join</h3>
                             <p>
-                                Visit the <a href="/aboutUs/chapters"
-                                    >Chapters</a
-                                > page to see the list of existing chapters. Find
+                                Visit the <a href="/aboutUs/locations"
+                                    >Locations</a
+                                > page to see the current locations. Find
                                 a school location that works for your schedule with
                                 subjects fitting your interest.
                             </p>
@@ -69,11 +69,6 @@
                 <div class="finish-note">
                     <p>
                         And you are done! We will be in touch with you shortly.
-                    </p>
-                    <p class="disclaimer">
-                        *You can only miss up to <strong>two</strong> sessions per
-                        season unless there is an unforeseen circumstance. Please
-                        notify your club leader ahead of time.
                     </p>
                 </div>
             </div>

@@ -147,6 +147,7 @@ export const onRequest = async ({
                   address?: string | null;
                   link?: string | null;
                   coverImage?: string | null;
+                  coverImages?: string[];
                   schoolCount?: number;
               }
             | null;
@@ -185,6 +186,9 @@ export const onRequest = async ({
                 region: chapter.region ?? '',
                 city: chapter.city,
                 schoolCount: schools.length,
+                coverImages: schools
+                    .map((school) => school.cover_image)
+                    .filter((image): image is string => Boolean(image)),
             };
         } else {
             const school = await env.DB.prepare(`
@@ -329,6 +333,7 @@ export const onRequest = async ({
                 schools: schools.map((school) => ({
                     id: school.id,
                     name: school.name,
+                    coverImage: school.cover_image,
                     address: school.address,
                     latitude: school.latitude,
                     longitude: school.longitude,

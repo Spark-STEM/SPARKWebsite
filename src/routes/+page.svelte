@@ -29,8 +29,8 @@
             </p>
             <div class="hero-actions">
                 <a href="/aboutUs/mission" class="btn btn-lg">Our Mission</a>
-                <a href="/aboutUs/chapters" class="btn btn-secondary btn-lg"
-                    >Our Chapters</a
+                <a href="/aboutUs/locations" class="btn btn-secondary btn-lg"
+                    >Our Locations</a
                 >
             </div>
         </div>
