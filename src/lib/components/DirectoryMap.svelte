@@ -2,6 +2,9 @@
     import { onMount } from 'svelte';
     import type * as Leaflet from 'leaflet';
     import 'leaflet/dist/leaflet.css';
+    import markerIconUrl from 'leaflet/dist/images/marker-icon.png';
+    import markerIconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png';
+    import markerShadowUrl from 'leaflet/dist/images/marker-shadow.png';
 
     interface MapLocation {
         id: number;
@@ -56,13 +59,27 @@
         );
         markers.clearLayers();
 
+        // Let Vite resolve these assets instead of Leaflet guessing their paths.
+        const destinationIcon = leaflet.icon({
+            iconUrl: markerIconUrl,
+            iconRetinaUrl: markerIconRetinaUrl,
+            shadowUrl: markerShadowUrl,
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            tooltipAnchor: [16, -28],
+            shadowSize: [41, 41],
+        });
+
         const bounds: Leaflet.LatLngExpression[] = [];
         for (const point of points) {
             const latitude = point.latitude;
             const longitude = point.longitude;
             if (latitude === null || longitude === null) continue;
 
-            const marker = leaflet.marker([latitude, longitude]);
+            const marker = leaflet.marker([latitude, longitude], {
+                icon: destinationIcon,
+            });
             const popup = document.createElement('div');
             const name = document.createElement('strong');
             name.textContent = point.name;
