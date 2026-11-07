@@ -61,12 +61,14 @@ export const onRequest = async ({
                 SELECT
                     c.id,
                     COALESCE(c.name, 'Unnamed chapter') AS name,
-                    COALESCE(c.country, 'Other') AS country,
-                    COALESCE(c.region, 'Other') AS region,
+                    COALESCE(co.name, c.country, 'Other') AS country,
+                    COALESCE(r.name, 'Other') AS region,
                     COUNT(s.id) AS schoolCount
                 FROM chapters c
+                LEFT JOIN countries co ON co.id = c.country_id
+                LEFT JOIN regions r ON r.id = c.region_id
                 LEFT JOIN schools s ON s.chapter_id = c.id
-                GROUP BY c.id, c.name, c.country, c.region
+                GROUP BY c.id, c.name, co.name, c.country, r.name
                 ORDER BY c.name
             `).all<ChapterRow>(),
             env.DB.prepare(`
@@ -77,13 +79,15 @@ export const onRequest = async ({
                     s.link,
                     s.cover_image AS coverImage,
                     c.name AS chapterName,
-                    COALESCE(c.country, 'Other') AS country,
-                    COALESCE(c.region, 'Other') AS region
+                    COALESCE(co.name, c.country, 'Other') AS country,
+                    COALESCE(r.name, 'Other') AS region
                 FROM schools s
                 LEFT JOIN chapters c ON s.chapter_id = c.id
+                LEFT JOIN countries co ON co.id = c.country_id
+                LEFT JOIN regions r ON r.id = c.region_id
                 ORDER BY
-                    c.country COLLATE NOCASE,
-                    c.region COLLATE NOCASE,
+                    COALESCE(co.name, c.country, 'Other') COLLATE NOCASE,
+                    COALESCE(r.name, 'Other') COLLATE NOCASE,
                     s.name COLLATE NOCASE
             `).all<SchoolRow>(),
         ]);

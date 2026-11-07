@@ -91,11 +91,13 @@ const schoolSelect = `
         s.cover_image,
         s.latitude,
         s.longitude,
-        c.country,
-        c.region,
+        COALESCE(co.name, c.country, 'Other') AS country,
+        r.name AS region,
         c.city
     FROM schools s
     LEFT JOIN chapters c ON c.id = s.chapter_id
+    LEFT JOIN countries co ON co.id = c.country_id
+    LEFT JOIN regions r ON r.id = c.region_id
 `;
 
 function safeExternalUrl(value: string | null): string | null {
@@ -156,9 +158,16 @@ export const onRequest = async ({
 
         if (type === 'chapter') {
             const chapter = await env.DB.prepare(`
-                SELECT id, name, country, region, city
-                FROM chapters
-                WHERE id = ?
+                SELECT
+                    c.id,
+                    c.name,
+                    COALESCE(co.name, c.country, 'Other') AS country,
+                    r.name AS region,
+                    c.city
+                FROM chapters c
+                LEFT JOIN countries co ON co.id = c.country_id
+                LEFT JOIN regions r ON r.id = c.region_id
+                WHERE c.id = ?
             `)
                 .bind(id)
                 .first<ChapterRow>();
