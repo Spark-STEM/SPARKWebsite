@@ -3,6 +3,12 @@
   "name": "spark-stem",
   "pages_build_output_dir": "./build",
   "compatibility_date": "2026-10-14",
+  "vars": {
+    "TICKET_API_URL": "https://discordbot.officialsparkstem.workers.dev/api/tickets",
+    "TICKET_OPENER_USER_ID": "1409557350729257090",
+    "TURNSTILE_SITE_KEY": "0x4AAAAAAF9ffqp4BsDirO-n",
+    "TURNSTILE_HOSTNAMES": "spark-stem.pages.dev"
+  },
   "d1_databases": [
     {
       "binding": "DB",

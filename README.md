@@ -56,13 +56,23 @@ Deploy with the Cloudflare Pages Git integration or run
 Deploying only the `build/` directory with a tool that omits `functions/` will
 not publish the API or dynamic detail routes.
 
-For local UI development, run `npm run dev` and open `http://localhost:5173`.
-When a Pages dev server is available at `http://127.0.0.1:8788`, the Vite app
-uses its local Functions API; otherwise, it falls back to the deployed API.
-To test the Functions locally, run `npm run build`, then
-`npx wrangler pages dev build`. The `DB` binding is configured as a remote
-binding, so these local Functions query the existing Cloudflare D1 database;
-avoid adding or invoking writes while testing.
+Run `npm run dev` and open `http://127.0.0.1:5173` for Vite HMR. The command
+builds the static site once, then starts Vite and `wrangler pages dev` together.
+Contact-form requests are proxied to the local Pages Functions runtime at
+`http://127.0.0.1:8788`. The `DB` binding is remote, so local Functions use the
+existing Cloudflare D1 database; avoid adding or invoking writes while testing.
+
+The contact form calls the same-origin Pages Function, which validates
+Turnstile before forwarding a ticket request to the Worker. Its public site key,
+Worker URL, opener ID, and production hostname are configured in
+`wrangler.jsonc`; never put either secret there. For local `npm run dev`,
+`.dev.vars` must contain `TURNSTILE_SECRET_KEY`, `TICKET_API_SECRET`, and
+`TURNSTILE_HOSTNAMES=localhost,127.0.0.1`. The Turnstile widget must allow the
+local hostname, and its hostname/action checks are enforced server-side.
+
+Cloudflare Pages secrets are set for project `spark-stem`. The matching
+`TICKET_API_SECRET` must also be set on the ticket Worker. The Worker enforces
+its own rate limits; the Pages-side challenge is not a replacement for them.
 
 ## Contribution
 

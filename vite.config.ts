@@ -38,4 +38,12 @@ function xcratchIndexRewrite(): Plugin {
 
 export default defineConfig({
     plugins: [xcratchIndexRewrite(), sveltekit()],
+    server: {
+        proxy: {
+            '/api/contact': {
+                target: 'http://127.0.0.1:8788',
+                changeOrigin: false,
+            },
+        },
+    },
 });

@@ -57,7 +57,7 @@
     <SplitCard
         reverse={true}
         kicker="Our Leadership"
-        title="Fully Ran by Students"
+        title="Fully Run by Students"
         imageSrc="/assets/classroom_images/3.png"
         imageAlt="High school volunteer mentor working with small student group"
         actionHref="/aboutUs/locations"
